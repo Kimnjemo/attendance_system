@@ -11,11 +11,8 @@ return new class extends Migration
      */
     public function up(): void
     {
-        Schema::create('devices', function (Blueprint $table) {
-            $table->id();
-            $table->foreignId('user_id')->constrained()->onDelete('cascade')->unique();
-            $table->string('device_id')->unique(); // Device UUID from mobile
-            $table->timestamps();
+        Schema::table('users', function (Blueprint $table) {
+            //
         });
     }
 
@@ -24,6 +21,8 @@ return new class extends Migration
      */
     public function down(): void
     {
-        Schema::dropIfExists('devices');
+        Schema::table('users', function (Blueprint $table) {
+            //
+        });
     }
 };

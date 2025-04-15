@@ -17,6 +17,10 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Navigation\NavigationGroup;
+use Filament\Support\Facades\FilamentView;
+use Filament\Pages\Dashboard;
+
 
 class SamPanelProvider extends PanelProvider
 {
@@ -37,8 +41,8 @@ class SamPanelProvider extends PanelProvider
             ])
             ->discoverWidgets(in: app_path('Filament/Widgets'), for: 'App\\Filament\\Widgets')
             ->widgets([
-                Widgets\AccountWidget::class,
-                Widgets\FilamentInfoWidget::class,
+               // Widgets\AccountWidget::class,
+              //  Widgets\FilamentInfoWidget::class,
             ])
             ->middleware([
                 EncryptCookies::class,
@@ -53,6 +57,57 @@ class SamPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
-    }
+            ])
+
+
+            ->renderHook('panels::layout', fn () => view('layouts.panel')) // 👈 this is key
+            ->pages([
+                // your pages
+                Dashboard::class,
+            /*   ListUsers::class,
+
+CreateUser::class,
+
+EditUser::class,*/
+
+            ])
+            
+            ->renderHook(
+                'panels::layout',
+                fn () => view('layouts.panel') // 👈 THIS will override the layout
+            );
+            ;
+
+
+
+
+
+        }
+         
+
+            public function navigation(): array
+            {
+                return [
+                    NavigationGroup::make()
+                        ->label('User Management')
+                        ->items([
+                            Pages\ListUsers::class,
+                            Pages\CreateUser::class,
+                        ]),
+            
+                    NavigationGroup::make()
+                        ->label('Settings')
+                        ->items([
+                            Pages\SystemSettings::class,
+                            Pages\ProfileSettings::class,
+                        ]),
+                ];
+
+
+
+            }
+            
+
+
+    
 }

@@ -14,9 +14,10 @@ return new class extends Migration
         Schema::create('leave_requests', function (Blueprint $table) {
             $table->id();
             $table->foreignId('user_id')->constrained()->onDelete('cascade');
+            $table->string('type')->nullable();
             $table->date('start_date');
             $table->date('end_date');
-            $table->string('reason');
+            $table->text('reason')->nullable();
             $table->enum('status', ['pending', 'approved', 'rejected'])->default('pending');
             $table->timestamps();
         });
@@ -29,4 +30,12 @@ return new class extends Migration
     {
         Schema::dropIfExists('leave_requests');
     }
+
+
+    protected function mutateFormDataBeforeCreate(array $data): array
+{
+    \Log::info('Submitting leave request', $data);
+    return $data;
+}
+
 };

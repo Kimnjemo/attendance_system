@@ -12,6 +12,7 @@ use Filament\Tables;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Illuminate\Database\Eloquent\Model;
 
 
 use Filament\Forms\Components\TextInput;
@@ -26,7 +27,7 @@ class UserResource extends Resource
 {
     protected static ?string $model = User::class;
 
-    protected static ?string $navigationIcon = 'heroicon-o-rectangle-stack';
+    protected static ?string $navigationIcon = 'heroicon-o-user-group';
 
     public static function form(Form $form): Form
     {
@@ -37,17 +38,28 @@ class UserResource extends Resource
                 ->required()
                 ->maxLength(255),
 
-            TextInput::make('email')
+         TextInput::make('email')
                 ->email()
                 ->required()
                 ->unique(ignoreRecord: true)
                 ->maxLength(255),
-
+   /*
             TextInput::make('api_token')
                 ->label('API Token')
                 ->maxLength(255)
                 ->unique(ignoreRecord: true)
                 ->nullable(),
+*/
+/*TextInput::make('api_token')
+    ->label('API Token')
+    ->helperText('Copy this token manually if needed.')
+    ->disabled()
+    //->copyable()
+    ,
+
+*/
+
+
 
             Select::make('role')
                 ->required()
@@ -55,7 +67,8 @@ class UserResource extends Resource
                     'admin' => 'Admin',
                     'employee' => 'Employee',
                 ])
-                ->default('employee'),
+               // ->default('employee')
+               ->required(),
 
             DateTimePicker::make('email_verified_at')
                 ->label('Email Verified At')
@@ -67,6 +80,18 @@ class UserResource extends Resource
                 ->maxLength(255)
                 ->dehydrated(fn ($state) => filled($state)) // Only save if input
                 ->label('Password'),
+
+
+                Select::make('location_id')
+                ->label('Location')
+                ->relationship('location', 'name') // 'name' is the column in locations table
+                ->searchable()
+                ->required()
+                ->preload(),
+                //->visible(fn (Forms\Get $get) => $get('role') === 'employee'),
+            
+            
+
             ]);
             
     }
@@ -77,9 +102,16 @@ class UserResource extends Resource
             ->columns([
                 TextColumn::make('name')->searchable()->sortable(),
                 TextColumn::make('email')->searchable()->sortable(),
-                TextColumn::make('role')->sortable(),
-                TextColumn::make('email_verified_at')->dateTime()->sortable(),
+                TextColumn::make('role')->sortable()->searchable(),
+              //  TextColumn::make('email_verified_at')->dateTime()->sortable(),
                 TextColumn::make('created_at')->dateTime()->sortable(),
+                
+                
+                TextColumn::make('location.name')
+                ->label('Location')
+                ->sortable()
+                ->searchable()
+                ,
                 
             ])
             ->filters([
@@ -87,6 +119,8 @@ class UserResource extends Resource
             ])
             ->actions([
                 Tables\Actions\EditAction::make(),
+                Tables\Actions\DeleteAction::make()
+                ->visible(fn () => auth()->user()?->role === 'admin'),
             ])
             ->bulkActions([
                 Tables\Actions\BulkActionGroup::make([
@@ -101,6 +135,27 @@ class UserResource extends Resource
             //
         ];
     }
+
+
+
+
+
+
+    public static function canEdit(Model $record): bool
+    {
+        return auth()->user()?->role === 'admin' || auth()->user()?->role === 'hr';
+    }
+    
+
+// Only admin can view the list of users
+public static function canViewAny(): bool
+{
+    return auth()->user()?->role === 'admin';
+}
+
+
+
+
 
     public static function getPages(): array
     {
